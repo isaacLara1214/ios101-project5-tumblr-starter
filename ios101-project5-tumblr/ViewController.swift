@@ -6,13 +6,39 @@
 import UIKit
 import Nuke
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITableViewDataSource {
+    
+    
+    
 
+    
+    @IBOutlet weak var tableView: UITableView!
+    
+    
+    var posts: [Post] = []
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return posts.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as! PostCell
+                let post = posts[indexPath.row]
+                
+                cell.postLabel.text = post.summary
 
+                if let photo = post.photos.first {
+                    Nuke.loadImage(with: photo.originalSize.url, into: cell.pictureImageView)
+                }
+
+                return cell
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
+        tableView.dataSource = self
+        print("✅ TableView dataSource set")
         fetchPosts()
     }
 
@@ -41,13 +67,17 @@ class ViewController: UIViewController {
 
                 DispatchQueue.main.async { [weak self] in
 
-                    let posts = blog.response.posts
+                    guard let self = self else { return }
+                                    
+                    self.posts = blog.response.posts  // ✅ Store the fetched posts
+                    self.tableView.reloadData()
 
 
                     print("✅ We got \(posts.count) posts!")
                     for post in posts {
                         print("🍏 Summary: \(post.summary)")
                     }
+                    
                 }
 
             } catch {
@@ -56,4 +86,6 @@ class ViewController: UIViewController {
         }
         session.resume()
     }
+    
+
 }
